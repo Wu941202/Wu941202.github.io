@@ -122,7 +122,7 @@
 <p>本文仅包含重力数据的几种获取方法，及测线上重力异常的计算。不涉及如延拓、融合的后处理。</p>
 </blockquote>
 <p>在海域地区或近海地区，航空重力测量、船测重力测量、卫星测高反演是最为常用的几种获取重力的手段。由于我没怎么接触过卫星测高，因此在此不对其获取与反演进行介绍。</p>
-<h3 id="航空重力数据"><a href="#航空重力数据" class="headerlink" title="航空重力数据"></a>航空重力数据</h3><p>航空重力，我基本是用的<a href="https://www.ngs.noaa.gov/" target="_blank" rel="noopener">美国国家大地测量局（NGS）</a>GRAV-D项目的数据。NGS上不仅数据丰富，还包含各类数据的处理工具（比如周锋博士的<a href="https://www.ngs.noaa.gov/gps-toolbox/GAMP.htm" target="_blank" rel="noopener">GAMP</a>就是一款开源的多系统精密单点定位软件）。<br>在进入GRAV-D项目后，点击<code>Data Product</code>即可进入数据页面，其数据发布形式以谷歌地图呈现，点击相应区块（绿色）则会显示数据链接，下载的数据中包含如图：<br><img src="/2019/06/01/2019-06-01/13-29-30.jpg" alt><br>ReadMe已经仔细介绍了各个文件。其实我们主要会用到的就是Gravity_Data和Supplement以及User_Manual三个，分别是主测线上重力数据，交叉测线上重力数据，和用户手册。</p>
+<h3 id="航空重力数据"><a href="#航空重力数据" class="headerlink" title="航空重力数据"></a>航空重力数据</h3><p>航空重力，我基本是用的<a href="https://www.ngs.noaa.gov/" target="_blank" rel="noopener">美国国家大地测量局（NGS）</a>GRAV-D项目的数据。NGS上不仅数据丰富，还包含各类数据的处理工具（比如周锋博士的<a href="https://www.ngs.noaa.gov/gps-toolbox/GAMP.htm" target="_blank" rel="noopener">GAMP</a>就是一款开源的多系统精密单点定位软件）。<br>在进入GRAV-D项目后，点击<code>Data Product</code>即可进入数据页面，其数据发布形式以谷歌地图呈现，点击相应区块（绿色）则会显示数据链接，下载的数据中包含如图：<br><img src="/2019/06/01/2019-06-01/13-29-30.jpg" alt><br>ReadMe已经仔细介绍了各个文件。其实我们主要会用到的就是Gravity_Data和Supplement以及User_Manual三个，分别是主测线上重力数据，交叉测线上重力数据和用户手册。</p>
 <h4 id="Gravity-Data、Supplement"><a href="#Gravity-Data、Supplement" class="headerlink" title="Gravity_Data、Supplement"></a>Gravity_Data、Supplement</h4><blockquote>
 <p>CS02101 55466 31.548310 -89.000413 11123.597026 976029.110000</p>
 </blockquote>
@@ -130,11 +130,11 @@
 <blockquote>
 <p>AS07101 20170617224010000   57.05756116 -153.66795843 7246.197 979497.22</p>
 </blockquote>
-<p>后面版本更新之后时间这得表述变了，可读性更好。</p>
+<p>版本更新之后观测时间的表述变为了UTC这样的格式。可读性更好。</p>
 <h4 id="用户手册"><a href="#用户手册" class="headerlink" title="用户手册"></a>用户手册</h4><p>用户手册中包含了：<br>1.测区位置，测区情况概述<br>2.测线情况，如间距，重复测线等<br>3.GPS和重力数据处理流程（还有细节部分，如重力误差分析等）<br>4.数据处理指南<br>5.参考<br>可根据需求查看相应部分。</p>
 <h4 id="测线上重力扰动的计算"><a href="#测线上重力扰动的计算" class="headerlink" title="测线上重力扰动的计算"></a>测线上重力扰动的计算</h4><p>可看到NGS发布的数据为观测重力数据，但经常我们需要用到重力扰动、重力异常等信息，为此我们可以使用NGS发布的<code>General Airborne Gravity User Manual</code>中提供的<code>matlab</code>、<code>Fortran</code>的代码来完成相应的转换，但如果需要进一步的处理，如高度改正、滤波或者交叉点平差等，则需要自己完成。</p>
-<h3 id="船测重力"><a href="#船测重力" class="headerlink" title="船测重力"></a>船测重力</h3><p>由美国原国家地球物理数据中心（NGDC）提供的船测重力数据，现在已经更名为<a href="https://www.ngdc.noaa.gov/mgg/gravity/gravity.html" target="_blank" rel="noopener">美国环境数据中心</a>。进入后点击<code>Trackline Geophysical Data Viewer</code>，可视化下载所需要的数据。<br>在<code>Trackline Geophysical Data Viewer</code>，你可以根据你所要的数据选择图层，再[点选or框选or用测线名搜索]。选择后你需要提供你的邮箱，过一段时间后[这个时间一般不会很长]，NGDC会给你发下载链接。下载数据解压后，包含如图：</p>
-<p><img src="/2019/06/01/2019-06-01/16-04-25.jpg" alt><br>注意，pdf是告诉你文件格式，下载的数据格式为m77t，我个人是利用NGDC提供的软件完成数据转换的。软件界面如下：</p>
+<h3 id="船测重力"><a href="#船测重力" class="headerlink" title="船测重力"></a>船测重力</h3><p>由美国原国家地球物理数据中心（NGDC）提供的船测重力数据，现在已经更名为<a href="https://www.ngdc.noaa.gov/mgg/gravity/gravity.html" target="_blank" rel="noopener">美国环境数据中心</a>。进入后点击<code>Trackline Geophysical Data Viewer</code>，可视化下载所需要的数据。<br>在<code>Trackline Geophysical Data Viewer</code>，你可以根据你所要的数据选择图层，再（点选or框选or用测线名搜索）。选择后你需要提供你的邮箱，过一段时间后（这个时间一般不会很长），NGDC会给你发下载链接。下载数据解压后，包含如图：</p>
+<p><img src="/2019/06/01/2019-06-01/16-04-25.jpg" alt><br>注意，此处的pdf文档是解释m77t格式的，下载的数据格式为m77t，我个人是利用NGDC提供的软件完成数据转换的。软件界面如下：</p>
 <p><img src="/2019/06/01/2019-06-01/16-06-52.jpg" alt></p>
 <p>软件能完成数据格式的转换，以及测线画图等，还能进行数据的合并和删改等，十分好用。软件的<a href="https://www.ngdc.noaa.gov/mgg/geodas/geodas.html" target="_blank" rel="noopener">下载链接</a>。</p>
 <h3 id="重力场模型"><a href="#重力场模型" class="headerlink" title="重力场模型"></a>重力场模型</h3><p>最后提一下重力场模型，有时我们计算时需要各种的数据特性，实测数据有时不能满足我们的要求。我们可以利用重力场模型来计算所选区域不同高度的不同位置的重力场元。</p>
@@ -143,7 +143,7 @@
 
             <div class="post-copyright">
     <div class="content">
-        <p>最后更新： 2019年06月02日 17:03</p>
+        <p>最后更新： 2019年06月02日 17:19</p>
         <p>原始链接： <a class="post-url" href="/2019/06/01/2019-06-01/" title="海空重力数据获取及相关处理">https://wu941202.github.io/2019/06/01/2019-06-01/</a></p>
         <footer>
             <a href="https://wu941202.github.io">
