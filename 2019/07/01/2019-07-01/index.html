@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>RTKLIB相对定位函数 | Wu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+    <meta name="keywords" content="Wu,Wu's Blog">
+  
+  <meta name="description" content="postpos之相对定位 直接 从execses开始1.读电离层，地球自转参数，观测值和导航、读dcb，设置pcv   大洋负荷 2.判断什么模式，相对定位调用antpos设置流动站和参考站位置 【注意，第一个观测值文件被视为流动站】     2.1 antpos     提供几种模式确定天线相位中心         a）伪距单点定位的平均值         b）从坐标文件中读         c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RTKLIB相对定位函数">
+<meta property="og:url" content="https://wu941202.github.io/2019/07/01/2019-07-01/index.html">
+<meta property="og:site_name" content="Wu&#39;s Blog">
+<meta property="og:description" content="postpos之相对定位 直接 从execses开始1.读电离层，地球自转参数，观测值和导航、读dcb，设置pcv   大洋负荷 2.判断什么模式，相对定位调用antpos设置流动站和参考站位置 【注意，第一个观测值文件被视为流动站】     2.1 antpos     提供几种模式确定天线相位中心         a）伪距单点定位的平均值         b）从坐标文件中读         c">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-07-01T16:30:01.140Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RTKLIB相对定位函数">
+<meta name="twitter:description" content="postpos之相对定位 直接 从execses开始1.读电离层，地球自转参数，观测值和导航、读dcb，设置pcv   大洋负荷 2.判断什么模式，相对定位调用antpos设置流动站和参考站位置 【注意，第一个观测值文件被视为流动站】     2.1 antpos     提供几种模式确定天线相位中心         a）伪距单点定位的平均值         b）从坐标文件中读         c">
+  
+  
+    <link rel="icon" href="/favicon.ico">
+  
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/pace.min.js"></script>
+  
+
+  
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+      <header id="header">
+    <div id="banner"></div>
+    <div id="header-outer">
+        <div id="header-menu" class="header-menu-pos animated">
+            <div class="header-menu-container">
+                <a href="/" class="left">
+                    <span class="site-title">Wu&#39;s Blog</span>
+                </a>
+                <nav id="header-menu-nav" class="right">
+                    
+                    <a href="/">
+                        <i class="fa fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    
+                    <a href="/archives">
+                        <i class="fa fa-archive"></i>
+                        <span>Archives</span>
+                    </a>
+                    
+                    <a href="/about">
+                        <i class="fa fa-user"></i>
+                        <span>About</span>
+                    </a>
+                    
+                </nav>
+                <a class="mobile-header-menu-button">
+                    <i class="fa fa-bars"></i>
+                </a>
+            </div>
+        </div>
+        <div id="header-row">
+            <div id="logo">
+                <a href="/">
+                    <img src="/images/Wu.png" alt="logo">
+                </a>
+            </div>
+            <div class="header-info">
+                <div id="header-title">
+                    
+                    <h2>
+                        Wu&#39;s Blog
+                    </h2>
+                    
+                </div>
+                <div id="header-description">
+                    
+                    <h3>
+                        一个并不专注的博客
+                    </h3>
+                    
+                </div>
+            </div>
+            <nav class="header-nav">
+                <div class="social">
+                    
+                        <a title="WuFF" target="_blank" href="//wu941202.github.io/">
+                            <i class="fa fa-home fa-2x"></i></a>
+                    
+                        <a title="Github" target="_blank" href="//github.com/Wu941202">
+                            <i class="fa fa-github fa-2x"></i></a>
+                    
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>
+      <div class="outer">
+        <section id="main" class="body-wrap"><article id="post-2019-07-01" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="post-title" itemprop="name">
+      RTKLIB相对定位函数
+    </h1>
+    <div class="post-title-bar">
+      <ul>
+          
+        <li>
+          <i class="fa fa-calendar"></i>  2019-07-01
+        </li>
+        <li>
+          <i class="fa fa-eye"></i>
+          <span id="busuanzi_value_page_pv"></span>
+        </li>
+      </ul>
+    </div>
+  
+
+          
+      </header>
+    
+    <div class="article-entry post-content" itemprop="articleBody">
+      
+            
+            <h4 id="postpos之相对定位-直接-从execses开始"><a href="#postpos之相对定位-直接-从execses开始" class="headerlink" title="postpos之相对定位 直接 从execses开始"></a>postpos之相对定位 直接 从execses开始</h4><pre><code>1.读电离层，地球自转参数，观测值和导航、读dcb，设置pcv
+  大洋负荷
+2.判断什么模式，相对定位调用antpos设置流动站和参考站位置
+【注意，第一个观测值文件被视为流动站】
+    2.1 antpos
+    提供几种模式确定天线相位中心
+        a）伪距单点定位的平均值
+        b）从坐标文件中读
+        c）从rinex的文件头读
+3.调用procpos
+    3.1 初始化rtk类，rtk-&gt;opt=procopt
+    3.2 逐历元读取观测值
+    3.3 排除非所选系统的卫星
+    3.4 corr_phase_bias_ssr 通过状态空间来改正载波相位 [具体事项待看]
+    3.5 进入rtkpos定位
+    3.6 输出</code></pre><h4 id="rtkpos"><a href="#rtkpos" class="headerlink" title="rtkpos"></a>rtkpos</h4><pre><code>1.设置基准站坐标，记录基准站、流动站该历元的观测卫星数
+2.初始历元，以spp确定流动站坐标
+3.选择各个定位模式，我这选用的静态相对定位。
+更新rtk-&gt;sol.age 当前时刻减初始时刻 为下一步同步下一历元时的基准站坐标做准备
+4.relpos(rtk,obs,nu,nr,nav);进行相对定位</code></pre><h4 id="relpos"><a href="#relpos" class="headerlink" title="relpos"></a>relpos</h4><pre><code>1.satposs进行卫星位置的计算 精密星历确定位置，钟差
+    <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sinl=<span class="built_in">sin</span>(OMGE*t[j]);</span><br><span class="line">cosl=<span class="built_in">cos</span>(OMGE*t[j]);</span><br><span class="line">p[<span class="number">0</span>][j]=cosl*pos[<span class="number">0</span>]-sinl*pos[<span class="number">1</span>];</span><br><span class="line">p[<span class="number">1</span>][j]=sinl*pos[<span class="number">0</span>]+cosl*pos[<span class="number">1</span>]; 这是为了地球自转改正吗？ 补：是的</span><br><span class="line">然后插值得到历元时刻的卫星位置</span><br></pre></td></tr></table></figure>
+
+2.zdres 计算非差残差，基准站 即载波相位、伪距和计算出的几何距离的差值
+    2.1 地球潮汐改正
+    2.2 ecef坐标转换为大地坐标，接着计算卫星和流动站几何距离、方位角、高度角
+    2.3 检查要排除的卫星
+    2.4 计算出的几何距离加上钟差改正【卫星钟差】
+    2.5 计算对流层延迟 tropmodel zhd 几何距离在进行对流层延迟改正 tropmapf为投影函数
+    2.6 antmodel 接收机天线相位中心改正
+    2.7 zdres_sat 在卫星端计算非差相位残差，分两种情况1电离层组合，2非组合
+    依据2.6计算得到的天线改正值dant和经过改正的几何距离r与原本的伪距和
+    相位观测值做差得到残差。
+3.intpres 残差随时间插值【暂略，事后用】
+    3.1 计算卫星位置satposs，计算非差残差zdres
+    3.2 插值
+4.selsat 选择基准站和流动站之间的共同卫星
+5.udstate 暂时更新状态 类似单点定位，为ekf做准备
+    5.1 udpos udion udtrop udrcvbias udbias
+    5.2 其实都是更新了ekf的初始协方差阵，并且探测和修复周跳
+6. zeres 此次计算的是流动站的非差残差
+7.ddres 开始双差和求偏导
+    7.1 baseline 计算基线长度 并将基准站和流动站在ecef坐标转为大地坐标
+    7.2 计算精密对流层和电离层延迟【IONOOPT_EST、TROPOPT_EST】
+    prectrop ionmapf
+    7.3 以高度角最大为原则寻找参考卫星
+        7.3.1 test_sys检查是否是所选择的导航系统，不是则进入下一次循环
+        7.3.2 validobs 检查观测数据是否有效。无效为：无相位数据可用，有伪距观测
+    也不用，无效则进入下次循环
+        7.3.3 遍历寻找最大高度角 以i记录下标
+    7.4 做双差观测量
+        7.4.1 上一步确定了参考卫星，这里选择用其他卫星和所选卫星做差
+        7.4.2 先将双差残差计算出来
+        7.4.3 更新ekf的H偏导阵（流动站位置），做电离层对流层双差后的延迟以及
+    相关偏导阵的更新。相位偏差双差后的值、偏导阵的更新
+    7.5 单差观测值误差的方差 varerr
+        7.5.1 扩展误差模型？？
+        a)码偏差 b)相位偏差
+        7.5.2 正常的 误差模型
+    7.6 双差协方差阵ddcov
+8.ekf卡尔曼滤波
+9.滤波后浮点解的双差残差 ddres
+10.浮点解有效性检验 valpos
+    10.1 通过检验的 更新x和P 状态和协方差阵
+11.通过lambda解整周模糊度
+    11.1 后续再写</code></pre>
+            <div class="post-copyright">
+    <div class="content">
+        <p>最后更新： 2019年07月02日 00:30</p>
+        <p>原始链接： <a class="post-url" href="/2019/07/01/2019-07-01/" title="RTKLIB相对定位函数">https://wu941202.github.io/2019/07/01/2019-07-01/</a></p>
+        <footer>
+            <a href="https://wu941202.github.io">
+                <img src="/images/Wu.png" alt="WuFF">
+                WuFF
+            </a>
+        </footer>
+    </div>
+</div>
+
+      
+        
+            
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;">赏</a>
+</div>
+
+<div id="reward" class="post-modal reward-lay">
+    <a class="close" href="javascript:;" id="reward-close">×</a>
+    <span class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        请我吃糖~
+        <i class="icon icon-quote-right"></i>
+    </span>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/images/wechat_code.jpg" alt="打赏二维码">
+        </div>
+        <div class="reward-select">
+            
+            <label class="reward-select-item checked" data-id="wechat" data-wechat="/images/wechat_code.jpg">
+                <img class="reward-select-item-wechat" src="/images/wechat.png" alt="微信">
+            </label>
+            
+            
+            <label class="reward-select-item" data-id="alipay" data-alipay="/images/alipay_code.jpg">
+                <img class="reward-select-item-alipay" src="/images/alipay.png" alt="支付宝">
+            </label>
+            
+        </div>
+    </div>
+</div>
+
+
+        
+    </div>
+    <footer class="article-footer">
+        
+        
+<div class="post-share">
+    <a href="javascript:;" id="share-sub" class="post-share-fab">
+        <i class="fa fa-share-alt"></i>
+    </a>
+    <div class="post-share-list" id="share-list">
+        <ul class="share-icons">
+          <li>
+            <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://wu941202.github.io/2019/07/01/2019-07-01/&title=《RTKLIB相对定位函数》 — Wu's Blog&pic=https://wu941202.github.ioimages/Wu.png" data-title="微博">
+              <i class="fa fa-weibo"></i>
+            </a>
+          </li>
+          <li>
+            <a class="weixin share-sns" id="wxFab" href="javascript:;" data-title="微信">
+              <i class="fa fa-weixin"></i>
+            </a>
+          </li>
+          <li>
+            <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://wu941202.github.io/2019/07/01/2019-07-01/&title=《RTKLIB相对定位函数》 — Wu's Blog&source=" data-title="QQ">
+              <i class="fa fa-qq"></i>
+            </a>
+          </li>
+          <li>
+            <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://wu941202.github.io/2019/07/01/2019-07-01/" data-title="Facebook">
+              <i class="fa fa-facebook"></i>
+            </a>
+          </li>
+          <li>
+            <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《RTKLIB相对定位函数》 — Wu's Blog&url=https://wu941202.github.io/2019/07/01/2019-07-01/&via=https://wu941202.github.io" data-title="Twitter">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+          <li>
+            <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://wu941202.github.io/2019/07/01/2019-07-01/" data-title="Google+">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        </ul>
+     </div>
+</div>
+<div class="post-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;" id="wxShare-close">×</a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://wu941202.github.io/2019/07/01/2019-07-01/" alt="微信分享二维码">
+</div>
+
+<div class="mask"></div>
+
+        
+        <ul class="article-footer-menu">
+            
+            
+        </ul>
+        
+    </footer>
+  </div>
+</article>
+
+
+    <aside class="post-toc-pos post-toc-top" id="post-toc">
+        <nav class="post-toc-wrap">
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#postpos之相对定位-直接-从execses开始"><span class="post-toc-text">postpos之相对定位 直接 从execses开始</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#rtkpos"><span class="post-toc-text">rtkpos</span></a></li><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#relpos"><span class="post-toc-text">relpos</span></a></li></ol>
+        </nav>
+    </aside>
+    
+
+<nav id="article-nav">
+  
+  
+    <a href="/2019/06/30/2019-06-30/" id="article-nav-older" class="article-nav-link-wrap">
+      <span class="article-nav-title">RTKLIB精密单点定位函数</span>
+      <i class="fa fa-hand-o-right" aria-hidden="true"></i>
+    </a>
+  
+</nav>
+
+
+
+    
+</section>
+        
+      </div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+<p>
+    <span id="busuanzi_container_site_uv" style="display:none">
+        总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style="display:none">
+        总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+      <p>
+        Powered by  <a href="http://hexo.io/" target="_blank">Hexo</a>
+        Theme <a href="//github.com/wongminho/hexo-theme-miho" target="_blank">MiHo</a>
+      &copy; 2019 WuFF<br>
+      </p>
+    </div>
+  </div>
+</footer>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script>
+  var mihoConfig = {
+      root: "https://wu941202.github.io",
+      animate: true,
+      isHome: false,
+      share: true,
+      reward: 1
+  }
+</script>
+<div class="sidebar">
+    <div id="sidebar-search" title="Search">
+        <i class="fa fa-search"></i>
+    </div>
+    <div id="sidebar-category" title="Categories">
+        <i class="fa fa-book"></i>
+    </div>
+    <div id="sidebar-tag" title="Tags">
+        <i class="fa fa-tags"></i>
+    </div>
+    <div id="sidebar-top">
+        <span class="sidebar-top-icon"><i class="fa fa-angle-up"></i></span>
+    </div>
+</div>
+<div class="sidebar-menu-box" id="sidebar-menu-box">
+    <div class="sidebar-menu-box-container">
+        <div id="sidebar-menu-box-categories">
+            
+        </div>
+        <div id="sidebar-menu-box-tags">
+            
+        </div>
+    </div>
+    <a href="javascript:;" class="sidebar-menu-box-close">&times;</a>
+</div>
+<div class="mobile-header-menu-nav" id="mobile-header-menu-nav">
+    <div class="mobile-header-menu-container">
+        <span class="title">Menus</span>
+        <ul class="mobile-header-menu-navbar">
+            
+            <li>
+                <a href="/">
+                    <i class="fa fa-home"></i><span>Home</span>
+                </a>
+            </li>
+            
+            <li>
+                <a href="/archives">
+                    <i class="fa fa-archive"></i><span>Archives</span>
+                </a>
+            </li>
+            
+            <li>
+                <a href="/about">
+                    <i class="fa fa-user"></i><span>About</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    <div class="mobile-header-tag-container">
+        <span class="title">Tags</span>
+        <div id="mobile-header-container-tags">
+            
+        </div>
+    </div>
+</div>
+<div class="search-wrap">
+    <span class="search-close">&times;</span>
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+            <i class="icon icon-lg icon-chevron-left"></i>
+        </a>
+        <input class="search-field" placeholder="Search..." id="keywords">
+        <a id="search-submit" href="javascript:;">
+            <i class="fa fa-search"></i>
+        </a>
+    <div class="search-container" id="search-container">
+        <ul class="search-result" id="search-result">
+        </ul>
+    </div>
+</div>
+
+<div id="search-tpl">
+    <li class="search-result-item">
+        <a href="{url}" class="search-item-li">
+            <span class="search-item-li-title" title="{title}">{title}</span>
+        </a>
+    </li>
+</div>
+<script src="/js/search.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="//cdn.bootcss.com/particles.js/2.0.0/particles.min.js"></script>
+  <div id="particles"></div>
+  <script src="/js/particles.js"></script>
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.5.0/animate.min.css">
+  <script src="//cdn.bootcss.com/scrollReveal.js/3.0.5/scrollreveal.js"></script>
+  <script src="/js/animate.js"></script>
+
+
+  <script src="/js/pop-img.js"></script>
+  <script>
+     $(".article-entry p img").popImg();
+  </script>
+
+  </div>
+</body>
+</html>
