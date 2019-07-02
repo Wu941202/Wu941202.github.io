@@ -8,17 +8,18 @@
   
     <meta name="keywords" content="Wu,Wu's Blog">
   
-  <meta name="description" content="一个大致的、笔记性质的介绍，细致的等比较空闲的时候再写。  123456789#define PMODE_SINGLE 0 /* positioning mode: single */#define PMODE_DGPS 1 /* positioning mode: DGPS/DGNSS */#define PMODE_KINEMA 2 /* positioning mode: kinemati">
+  <meta name="description" content="一个大致的、笔记性质的介绍，细致的等比较空闲的时候再写。 事后精密单点定位：**postpos-&amp;gt;procpos-&amp;gt;rtkpos-&amp;gt;pppos**123456789#define PMODE_SINGLE 0 /* positioning mode: single */#define PMODE_DGPS 1 /* positioning mode: DGPS/DGNSS */#">
+<meta name="keywords" content="rtklib,ppp">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RTKLIB精密单点定位函数">
 <meta property="og:url" content="https://wu941202.github.io/2019/06/30/2019-06-30/index.html">
 <meta property="og:site_name" content="Wu&#39;s Blog">
-<meta property="og:description" content="一个大致的、笔记性质的介绍，细致的等比较空闲的时候再写。  123456789#define PMODE_SINGLE 0 /* positioning mode: single */#define PMODE_DGPS 1 /* positioning mode: DGPS/DGNSS */#define PMODE_KINEMA 2 /* positioning mode: kinemati">
+<meta property="og:description" content="一个大致的、笔记性质的介绍，细致的等比较空闲的时候再写。 事后精密单点定位：**postpos-&amp;gt;procpos-&amp;gt;rtkpos-&amp;gt;pppos**123456789#define PMODE_SINGLE 0 /* positioning mode: single */#define PMODE_DGPS 1 /* positioning mode: DGPS/DGNSS */#">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-06-30T16:03:29.776Z">
+<meta property="og:updated_time" content="2019-07-02T08:38:00.068Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RTKLIB精密单点定位函数">
-<meta name="twitter:description" content="一个大致的、笔记性质的介绍，细致的等比较空闲的时候再写。  123456789#define PMODE_SINGLE 0 /* positioning mode: single */#define PMODE_DGPS 1 /* positioning mode: DGPS/DGNSS */#define PMODE_KINEMA 2 /* positioning mode: kinemati">
+<meta name="twitter:description" content="一个大致的、笔记性质的介绍，细致的等比较空闲的时候再写。 事后精密单点定位：**postpos-&amp;gt;procpos-&amp;gt;rtkpos-&amp;gt;pppos**123456789#define PMODE_SINGLE 0 /* positioning mode: single */#define PMODE_DGPS 1 /* positioning mode: DGPS/DGNSS */#">
   
   
     <link rel="icon" href="/favicon.ico">
@@ -115,6 +116,13 @@
     <div class="post-title-bar">
       <ul>
           
+              <li>
+                  <i class="fa fa-book"></i>
+                  
+                      <a href="/categories/RTKLIB/">RTKLIB</a>
+                  
+              </li>
+          
         <li>
           <i class="fa fa-calendar"></i>  2019-06-30
         </li>
@@ -132,13 +140,11 @@
     <div class="article-entry post-content" itemprop="articleBody">
       
             
-            <blockquote>
-<p>一个大致的、笔记性质的介绍，细致的等比较空闲的时候再写。</p>
-</blockquote>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_SINGLE 0 <span class="comment">/* positioning mode: single */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_DGPS 1 <span class="comment">/* positioning mode: DGPS/DGNSS */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_KINEMA 2 <span class="comment">/* positioning mode: kinematic */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_STATIC 3 <span class="comment">/* positioning mode: static */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_MOVEB 4 <span class="comment">/* positioning mode: moving-base */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_FIXED 5 <span class="comment">/* positioning mode: fixed */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_PPP_KINEMA 6 <span class="comment">/* positioning mode: PPP-kinemaric */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_PPP_STATIC 7 <span class="comment">/* positioning mode: PPP-static */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_PPP_FIXED 8 <span class="comment">/* positioning mode: PPP-fixed */</span></span></span><br></pre></td></tr></table></figure>
+            <pre><code>一个大致的、笔记性质的介绍，细致的等比较空闲的时候再写。
+事后精密单点定位：**postpos-&gt;procpos-&gt;rtkpos-&gt;pppos**</code></pre><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_SINGLE 0 <span class="comment">/* positioning mode: single */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_DGPS 1 <span class="comment">/* positioning mode: DGPS/DGNSS */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_KINEMA 2 <span class="comment">/* positioning mode: kinematic */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_STATIC 3 <span class="comment">/* positioning mode: static */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_MOVEB 4 <span class="comment">/* positioning mode: moving-base */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_FIXED 5 <span class="comment">/* positioning mode: fixed */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_PPP_KINEMA 6 <span class="comment">/* positioning mode: PPP-kinemaric */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_PPP_STATIC 7 <span class="comment">/* positioning mode: PPP-static */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PMODE_PPP_FIXED 8 <span class="comment">/* positioning mode: PPP-fixed */</span></span></span><br></pre></td></tr></table></figure>
 
 <p>以上为rtklib具备的定位模式。<br>KINEMA、STATIC为相对定位</p>
-<h4 id="事后精密单点定位-postpos-gt-procpos-gt-rtkpos-gt-pppos"><a href="#事后精密单点定位-postpos-gt-procpos-gt-rtkpos-gt-pppos" class="headerlink" title="事后精密单点定位  postpos-&gt;procpos-&gt;rtkpos-&gt;pppos"></a>事后精密单点定位  postpos-&gt;procpos-&gt;rtkpos-&gt;pppos</h4><h5 id="postpos"><a href="#postpos" class="headerlink" title="postpos"></a>postpos</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">int</span> <span class="title">postpos</span><span class="params">(<span class="keyword">gtime_t</span> ts, <span class="keyword">gtime_t</span> te, <span class="keyword">double</span> ti, <span class="keyword">double</span> tu,</span></span></span><br><span class="line"><span class="function"><span class="params">                   <span class="keyword">const</span> <span class="keyword">prcopt_t</span> *popt, <span class="keyword">const</span> <span class="keyword">solopt_t</span> *sopt,</span></span></span><br><span class="line"><span class="function"><span class="params">                   <span class="keyword">const</span> <span class="keyword">filopt_t</span> *fopt, <span class="keyword">char</span> **infile, <span class="keyword">int</span> n, <span class="keyword">char</span> *outfile,</span></span></span><br><span class="line"><span class="function"><span class="params">                   <span class="keyword">const</span> <span class="keyword">char</span> *rov, <span class="keyword">const</span> <span class="keyword">char</span> *base)</span></span></span><br><span class="line"><span class="function"><span class="comment">/* post-processing positioning -------------------------------------------------</span></span></span><br><span class="line"><span class="function"><span class="comment">* post-processing positioning</span></span></span><br><span class="line"><span class="function"><span class="comment">* args   : gtime_t ts       I   processing start time (ts.time==0: no limit)</span></span></span><br><span class="line"><span class="function"><span class="comment">*        : gtime_t te       I   processing end time   (te.time==0: no limit)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          double ti        I   processing interval  (s) (0:all)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          double tu        I   processing unit time (s) (0:all)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          prcopt_t *popt   I   processing options</span></span></span><br><span class="line"><span class="function"><span class="comment">*          solopt_t *sopt   I   solution options</span></span></span><br><span class="line"><span class="function"><span class="comment">*          filopt_t *fopt   I   file options</span></span></span><br><span class="line"><span class="function"><span class="comment">*          char   **infile  I   input files (see below)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          int    n         I   number of input files</span></span></span><br><span class="line"><span class="function"><span class="comment">*          char   *outfile  I   output file ("":stdout, see below)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          char   *rov      I   rover id list        (separated by " ")</span></span></span><br><span class="line"><span class="function"><span class="comment">*          char   *base     I   base station id list (separated by " ")</span></span></span><br><span class="line"><span class="function"><span class="comment">* return : status (0:ok,0&gt;:error,1:aborted)</span></span></span><br><span class="line"><span class="function"><span class="comment">*-----------------------------------------------------------------------------*/</span></span></span><br></pre></td></tr></table></figure>
+<h4 id="事后精密单点定位"><a href="#事后精密单点定位" class="headerlink" title="事后精密单点定位"></a>事后精密单点定位</h4><h5 id="postpos"><a href="#postpos" class="headerlink" title="postpos"></a>postpos</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">int</span> <span class="title">postpos</span><span class="params">(<span class="keyword">gtime_t</span> ts, <span class="keyword">gtime_t</span> te, <span class="keyword">double</span> ti, <span class="keyword">double</span> tu,</span></span></span><br><span class="line"><span class="function"><span class="params">                   <span class="keyword">const</span> <span class="keyword">prcopt_t</span> *popt, <span class="keyword">const</span> <span class="keyword">solopt_t</span> *sopt,</span></span></span><br><span class="line"><span class="function"><span class="params">                   <span class="keyword">const</span> <span class="keyword">filopt_t</span> *fopt, <span class="keyword">char</span> **infile, <span class="keyword">int</span> n, <span class="keyword">char</span> *outfile,</span></span></span><br><span class="line"><span class="function"><span class="params">                   <span class="keyword">const</span> <span class="keyword">char</span> *rov, <span class="keyword">const</span> <span class="keyword">char</span> *base)</span></span></span><br><span class="line"><span class="function"><span class="comment">/* post-processing positioning -------------------------------------------------</span></span></span><br><span class="line"><span class="function"><span class="comment">* post-processing positioning</span></span></span><br><span class="line"><span class="function"><span class="comment">* args   : gtime_t ts       I   processing start time (ts.time==0: no limit)</span></span></span><br><span class="line"><span class="function"><span class="comment">*        : gtime_t te       I   processing end time   (te.time==0: no limit)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          double ti        I   processing interval  (s) (0:all)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          double tu        I   processing unit time (s) (0:all)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          prcopt_t *popt   I   processing options</span></span></span><br><span class="line"><span class="function"><span class="comment">*          solopt_t *sopt   I   solution options</span></span></span><br><span class="line"><span class="function"><span class="comment">*          filopt_t *fopt   I   file options</span></span></span><br><span class="line"><span class="function"><span class="comment">*          char   **infile  I   input files (see below)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          int    n         I   number of input files</span></span></span><br><span class="line"><span class="function"><span class="comment">*          char   *outfile  I   output file ("":stdout, see below)</span></span></span><br><span class="line"><span class="function"><span class="comment">*          char   *rov      I   rover id list        (separated by " ")</span></span></span><br><span class="line"><span class="function"><span class="comment">*          char   *base     I   base station id list (separated by " ")</span></span></span><br><span class="line"><span class="function"><span class="comment">* return : status (0:ok,0&gt;:error,1:aborted)</span></span></span><br><span class="line"><span class="function"><span class="comment">*-----------------------------------------------------------------------------*/</span></span></span><br></pre></td></tr></table></figure>
 
 <p>execses_b-&gt;execses_r-&gt;execess<br>精密星历的读取在execses_b中执行。从execess开始：</p>
 <h5 id="execess"><a href="#execess" class="headerlink" title="execess"></a>execess</h5><pre><code>1.readtec   读电离层等
@@ -186,7 +192,7 @@
 看更新日志 ppp_ar被删了..</code></pre>
             <div class="post-copyright">
     <div class="content">
-        <p>最后更新： 2019年07月01日 00:03</p>
+        <p>最后更新： 2019年07月02日 16:38</p>
         <p>原始链接： <a class="post-url" href="/2019/06/30/2019-06-30/" title="RTKLIB精密单点定位函数">https://wu941202.github.io/2019/06/30/2019-06-30/</a></p>
         <footer>
             <a href="https://wu941202.github.io">
@@ -244,7 +250,7 @@
     <div class="post-share-list" id="share-list">
         <ul class="share-icons">
           <li>
-            <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://wu941202.github.io/2019/06/30/2019-06-30/&title=《RTKLIB精密单点定位函数》 — Wu's Blog&pic=https://wu941202.github.ioimages/Wu.png" data-title="微博">
+            <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://wu941202.github.io/2019/06/30/2019-06-30/&title=《RTKLIB精密单点定位函数》 — Wu's Blog&pic=/2019-06-30/2019-06-30.jpg" data-title="微博">
               <i class="fa fa-weibo"></i>
             </a>
           </li>
@@ -288,6 +294,15 @@
         <ul class="article-footer-menu">
             
             
+  <li class="article-footer-tags">
+    <i class="fa fa-tags"></i>
+      
+    <a href="/tags/rtklib/" class="color2">rtklib</a>
+      
+    <a href="/tags/ppp/" class="color4">ppp</a>
+      
+  </li>
+
         </ul>
         
     </footer>
@@ -297,7 +312,7 @@
 
     <aside class="post-toc-pos post-toc-top" id="post-toc">
         <nav class="post-toc-wrap">
-            <ol class="post-toc"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#事后精密单点定位-postpos-gt-procpos-gt-rtkpos-gt-pppos"><span class="post-toc-text">事后精密单点定位  postpos-&gt;procpos-&gt;rtkpos-&gt;pppos</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#postpos"><span class="post-toc-text">postpos</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#execess"><span class="post-toc-text">execess</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#procpos"><span class="post-toc-text">procpos</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#PPPOS"><span class="post-toc-text">PPPOS</span></a></li></ol></li></ol>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#事后精密单点定位"><span class="post-toc-text">事后精密单点定位</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#postpos"><span class="post-toc-text">postpos</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#execess"><span class="post-toc-text">execess</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#procpos"><span class="post-toc-text">procpos</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#PPPOS"><span class="post-toc-text">PPPOS</span></a></li></ol></li></ol>
         </nav>
     </aside>
     
@@ -309,7 +324,7 @@
       <span class="article-nav-title">
         <i class="fa fa-hand-o-left" aria-hidden="true"></i>
         
-          RTKLIB相对定位函数
+          RTKLIB相对定位
         
       </span>
     </a>
@@ -378,10 +393,10 @@
 <div class="sidebar-menu-box" id="sidebar-menu-box">
     <div class="sidebar-menu-box-container">
         <div id="sidebar-menu-box-categories">
-            
+            <a class="category-link" href="/categories/RTKLIB/">RTKLIB</a><a class="category-link" href="/categories/重力数据处理/">重力数据处理</a>
         </div>
         <div id="sidebar-menu-box-tags">
-            
+            <a href="/tags/ppp/" style="font-size: 10px;">ppp</a> <a href="/tags/rp/" style="font-size: 10px;">rp</a> <a href="/tags/rtklib/" style="font-size: 20px;">rtklib</a>
         </div>
     </div>
     <a href="javascript:;" class="sidebar-menu-box-close">&times;</a>
@@ -414,7 +429,7 @@
     <div class="mobile-header-tag-container">
         <span class="title">Tags</span>
         <div id="mobile-header-container-tags">
-            
+            <a href="/tags/ppp/" style="font-size: 10px;">ppp</a> <a href="/tags/rp/" style="font-size: 10px;">rp</a> <a href="/tags/rtklib/" style="font-size: 20px;">rtklib</a>
         </div>
     </div>
 </div>
