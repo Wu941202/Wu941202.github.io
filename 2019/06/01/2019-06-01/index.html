@@ -302,7 +302,12 @@
 
 
     
-</section>
+
+{% if post.summary_img  %}
+  <div class="out-img-topic">
+    <img src="{{" post.summary_img }} class="img-topic">
+  </div>
+{% endif %}</section>
         
       </div>
       <footer id="footer">
