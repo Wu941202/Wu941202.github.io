@@ -141,8 +141,7 @@
       
             
             <p>简单的写了个流程，为事后相对定位</p>
-<p>基本流程为  <strong>postpos-&gt;rtkpos-&gt;relpos</strong></p>
-<a id="more"></a>
+<p>基本流程为  <strong>postpos-&gt;rtkpos-&gt;relpos</strong><br><a id="more"></a></p>
 <h4 id="postpos之相对定位-直接-从execses开始"><a href="#postpos之相对定位-直接-从execses开始" class="headerlink" title="postpos之相对定位 直接 从execses开始"></a>postpos之相对定位 直接 从execses开始</h4><pre><code>1.读电离层，地球自转参数，观测值和导航、读dcb，设置pcv
   大洋负荷
 2.判断什么模式，相对定位调用antpos设置流动站和参考站位置
@@ -158,11 +157,13 @@
     3.3 排除非所选系统的卫星
     3.4 corr_phase_bias_ssr 通过状态空间来改正载波相位 [具体事项待看]
     3.5 进入rtkpos定位
-    3.6 输出</code></pre><h4 id="rtkpos"><a href="#rtkpos" class="headerlink" title="rtkpos"></a>rtkpos</h4><pre><code>1.设置基准站坐标，记录基准站、流动站该历元的观测卫星数
+    3.6 输出
+</code></pre><h4 id="rtkpos"><a href="#rtkpos" class="headerlink" title="rtkpos"></a>rtkpos</h4><pre><code>1.设置基准站坐标，记录基准站、流动站该历元的观测卫星数
 2.初始历元，以spp确定流动站坐标
 3.选择各个定位模式，我这选用的静态相对定位。
 更新rtk-&gt;sol.age 当前时刻减初始时刻 为下一步同步下一历元时的基准站坐标做准备
-4.relpos(rtk,obs,nu,nr,nav);进行相对定位</code></pre><h4 id="relpos"><a href="#relpos" class="headerlink" title="relpos"></a>relpos</h4><pre><code>1.satposs进行卫星位置的计算 精密星历确定位置，钟差
+4.relpos(rtk,obs,nu,nr,nav);进行相对定位
+</code></pre><h4 id="relpos"><a href="#relpos" class="headerlink" title="relpos"></a>relpos</h4><pre><code>1.satposs进行卫星位置的计算 精密星历确定位置，钟差
     <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sinl=<span class="built_in">sin</span>(OMGE*t[j]);</span><br><span class="line">cosl=<span class="built_in">cos</span>(OMGE*t[j]);</span><br><span class="line">p[<span class="number">0</span>][j]=cosl*pos[<span class="number">0</span>]-sinl*pos[<span class="number">1</span>];</span><br><span class="line">p[<span class="number">1</span>][j]=sinl*pos[<span class="number">0</span>]+cosl*pos[<span class="number">1</span>]; 这是为了地球自转改正吗？ 补：是的</span><br><span class="line">然后插值得到历元时刻的卫星位置</span><br></pre></td></tr></table></figure>
 
 2.zdres 计算非差残差，基准站 即载波相位、伪距和计算出的几何距离的差值
@@ -207,7 +208,8 @@
 10.浮点解有效性检验 valpos
     10.1 通过检验的 更新x和P 状态和协方差阵
 11.通过lambda解整周模糊度
-    11.1 后续再写</code></pre>
+    11.1 后续再写
+</code></pre>
             <div class="post-copyright">
     <div class="content">
         <p>最后更新： 2019年07月01日 00:00</p>
