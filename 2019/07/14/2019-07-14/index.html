@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <title>RTKLIB与GAMP的周跳探测实现 | Wu&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+    <meta name="keywords" content="Wu,Wu's Blog">
+  
+  <meta name="description" content="阅读RTKLIB源码后发现，RTKLIB中采取观测值文件中LLI标志（卫星失锁）、GF组合和MW组合三种方式联合探测周跳，GF组合与MW组合在RTKLIB中采取经验阈值来判断是否发生周跳。">
+<meta name="keywords" content="rtklib,GMAP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RTKLIB与GAMP的周跳探测实现">
+<meta property="og:url" content="https://wu941202.github.io/2019/07/14/2019-07-14/index.html">
+<meta property="og:site_name" content="Wu&#39;s Blog">
+<meta property="og:description" content="阅读RTKLIB源码后发现，RTKLIB中采取观测值文件中LLI标志（卫星失锁）、GF组合和MW组合三种方式联合探测周跳，GF组合与MW组合在RTKLIB中采取经验阈值来判断是否发生周跳。">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://i.loli.net/2019/07/14/5d2abd5d5bf0b82889.png">
+<meta property="og:updated_time" content="2019-06-30T16:00:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RTKLIB与GAMP的周跳探测实现">
+<meta name="twitter:description" content="阅读RTKLIB源码后发现，RTKLIB中采取观测值文件中LLI标志（卫星失锁）、GF组合和MW组合三种方式联合探测周跳，GF组合与MW组合在RTKLIB中采取经验阈值来判断是否发生周跳。">
+<meta name="twitter:image" content="https://i.loli.net/2019/07/14/5d2abd5d5bf0b82889.png">
+  
+  
+    <link rel="icon" href="/Wu.ico">
+  
+  <link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/pace.min.js"></script>
+  
+
+  
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+      <header id="header">
+    <div id="banner"></div>
+    <div id="header-outer">
+        <div id="header-menu" class="header-menu-pos animated">
+            <div class="header-menu-container">
+                <a href="/" class="left">
+                    <span class="site-title">Wu&#39;s Blog</span>
+                </a>
+                <nav id="header-menu-nav" class="right">
+                    
+                    <a href="/">
+                        <i class="fa fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    
+                    <a href="/archives">
+                        <i class="fa fa-archive"></i>
+                        <span>Archives</span>
+                    </a>
+                    
+                    <a href="/about">
+                        <i class="fa fa-user"></i>
+                        <span>About</span>
+                    </a>
+                    
+                </nav>
+                <a class="mobile-header-menu-button">
+                    <i class="fa fa-bars"></i>
+                </a>
+            </div>
+        </div>
+        <div id="header-row">
+            <div id="logo">
+                <a href="/">
+                    <img src="/images/Wu.png" alt="logo">
+                </a>
+            </div>
+            <div class="header-info">
+                <div id="header-title">
+                    
+                    <h2>
+                        Wu&#39;s Blog
+                    </h2>
+                    
+                </div>
+                <div id="header-description">
+                    
+                    <h3>
+                        一个并不专注的博客
+                    </h3>
+                    
+                </div>
+            </div>
+            <nav class="header-nav">
+                <div class="social">
+                    
+                        <a title="WuFF" href="//wu941202.github.io/">
+                            <i class="fa fa-home fa-2x"></i></a>
+                    
+                        <a title="Github" target="_blank" href="//github.com/Wu941202">
+                            <i class="fa fa-github fa-2x"></i></a>
+                    
+                </div>
+            </nav>
+        </div>
+    </div>
+</header>
+      <div class="outer">
+        <section id="main" class="body-wrap"><article id="post-2019-07-14" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="post-title" itemprop="name">
+      RTKLIB与GAMP的周跳探测实现
+    </h1>
+    <div class="post-title-bar">
+      <ul>
+          
+              <li>
+                  <i class="fa fa-book"></i>
+                  
+                      <a href="/categories/RTKLIB/">RTKLIB</a>
+                  
+              </li>
+          
+        <li>
+          <i class="fa fa-calendar"></i>  2019-07-14
+        </li>
+        <li>
+          <i class="fa fa-eye"></i>
+          <span id="busuanzi_value_page_pv"></span>
+        </li>
+      </ul>
+    </div>
+  
+
+          
+      </header>
+    
+    <div class="article-entry post-content" itemprop="articleBody">
+      
+            
+            <blockquote>
+<p> 阅读RTKLIB源码后发现，RTKLIB中采取观测值文件中LLI标志（卫星失锁）、GF组合和MW组合三种方式联合探测周跳，GF组合与MW组合在RTKLIB中采取经验阈值来判断是否发生周跳。</p>
+</blockquote>
+<a id="more"></a>
+<h3 id="常用周跳探测方法"><a href="#常用周跳探测方法" class="headerlink" title="常用周跳探测方法"></a>常用周跳探测方法</h3><p>&emsp;&emsp;载波相位周跳探测是高精度测量的关键技术，常用的周跳探测方法各具优势，但同时也存在一些探测失效的情况，如 MW 组合周跳探测精度高，但当两个频率同时发生同样大小周跳时该方法探测失效，无几何组合去除系统性影响造成的误差十分有效，但由于噪声较大探测精度不高；电离层残差组合利用双频数据，难于确定单个载波上的周跳，而且存在对一些周跳组合不敏感的问题，但如同<u><strong>RTKLIB</strong></u>联合使用上述方法时，则是一种周跳探测的理想方案。</p>
+<h4 id="双频组合周跳探测"><a href="#双频组合周跳探测" class="headerlink" title="双频组合周跳探测"></a>双频组合周跳探测</h4><h5 id="基于MW组合的周跳探测方法"><a href="#基于MW组合的周跳探测方法" class="headerlink" title="基于MW组合的周跳探测方法"></a>基于MW组合的周跳探测方法</h5><script type="math/tex; mode=display">L_{mw}=\lambda_{mw}(\phi_2-\phi_2)=\rho+\frac{f_1f_2}{f^2_1-f^2_2}I+\lambda_{mw}N_{mw}</script><script type="math/tex; mode=display">P_{mw}=\frac{f_1P_1+f_2P_2}{f_1+f_2}=\rho+\frac{f_1f_2}{f^2_1-f^2_2}I</script><p>MW组合为：</p>
+<script type="math/tex; mode=display">N_{mw}=\lambda_{mw}(\phi_1-\phi_2)-\frac{f_1P_1+f_2P_2}{f_1+f_2}</script><p>&emsp;&emsp;可看出MW组合消除了电离层延迟、钟差（卫地）、站星几何距离，只包含<strong>宽巷模糊度和噪声</strong>，非常适合探测周跳。在RTKLIB中，MW组合的周跳探测是根据经验阈值(pppos.c)来确定的：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> THRES_MW_JUMP 10.0</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">detslp_mw</span><span class="params">(<span class="keyword">rtk_t</span> *rtk, <span class="keyword">const</span> <span class="keyword">obsd_t</span> *obs, <span class="keyword">int</span> n, <span class="keyword">const</span> <span class="keyword">nav_t</span> *nav)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> w0,w1;</span><br><span class="line">    <span class="keyword">int</span> i,j;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>;i&lt;n&amp;&amp;i&lt;MAXOBS;i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((w1=mwmeas(obs+i,nav))==<span class="number">0.0</span>) <span class="keyword">continue</span>;</span><br><span class="line">        w0=rtk-&gt;ssat[obs[i].sat<span class="number">-1</span>].mw;</span><br><span class="line">        rtk-&gt;ssat[obs[i].sat<span class="number">-1</span>].mw=w1;            </span><br><span class="line">        <span class="keyword">if</span> (w0!=<span class="number">0.0</span>&amp;&amp;<span class="built_in">fabs</span>(w1-w0)&gt;THRES_MW_JUMP) &#123;</span><br><span class="line">            <span class="keyword">for</span> (j=<span class="number">0</span>;j&lt;rtk-&gt;opt.nf;j++) rtk-&gt;ssat[obs[i].sat<span class="number">-1</span>].slip[j]|=<span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>&emsp;&emsp;代码中<em>mwmeas</em>为构造MW组合的函数，当相邻历元之间的MW构造量之差大于<strong>THRES_MW_JUMP</strong>（10）时，RTKLIB将其记为周跳。<br>&emsp;&emsp;而在很多论文中，Blewitt方法中，是根据递推方法求MW构造量之差的平均值和均方根中误差来探测的：</p>
+<script type="math/tex; mode=display">{N}(i )=\overline{N}(i-1)+\frac{1}{i}[N(i)-\overline{N}(i-1)]</script><script type="math/tex; mode=display">\sigma^2(i)=\sigma^2(i-1)+\frac{1}{i}[(N(i)-\overline{N}(i-1))^2-\sigma^2(i-1)]</script><p>其中，$\overline{N}(i-1)$为前i个历元宽巷模糊度的平均值；$\sigma(i)$便是前i个历元的标准差，若满足如下两个条件，则认为当前历元存在周跳：</p>
+<script type="math/tex; mode=display">|N(i)-\overline{N}(i-1)|\geq4\sigma(i-1)</script><script type="math/tex; mode=display">|N(i)-{N}(i+1)|\leq1</script><p>&emsp;&emsp;由于<strong>RTKLIB</strong>中原函数并非在数据读取时进行预处理，它考虑了实时定位，因此MW组合探测周跳函数放在pppos函数初始化协方差中，每次都只传入单历元的数据计算mw值，联合上个历元计算得到的mw值，判断本历元是否发生了周跳。而要根据公式看出，递推方法不仅需要上个历元及本次历元，还需要下一个历元共三个历元，因此在只传入一组观测历元的情况下是无法完成周跳探测的，若做事后的精密定位，可考虑将周跳探测单独拿出来做，或者添加一个全局变量。<br>&emsp;&emsp;在<strong>GAMP</strong>中（基于RTKLIB二次开发的多系统非差非组合精密单点定位开源程序）改进了RTKLIB的周跳探测代码，具体的做法是定义了一个全局结构体：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PPPGlobal_t PPP_Glo;</span><br></pre></td></tr></table></figure></p>
+<p>&emsp;&emsp;此全局结构体中存储了采样时间和卫星高度角，考虑这两种因素来给周跳检测赋予不同的经验阈值。具体公式为：<br><img src="https://i.loli.net/2019/07/14/5d2abd5d5bf0b82889.png" alt><br>&emsp;&emsp;公式中$E$为高度角，$R$为采样时间；$R<em>{GF}$单位为米或m，$R</em>{MW}$单位为周或m，分别为GF组合与MW组合的阈值。GAMP中单点定位的周跳探测函数为<strong>detecs</strong>在myPpp.c中，<br>&emsp;&emsp;先贴出gamp中实现MW组合的代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">detslp_mw</span><span class="params">(<span class="keyword">rtk_t</span> *rtk, <span class="keyword">const</span> <span class="keyword">obsd_t</span> *obs, <span class="keyword">int</span> n, <span class="keyword">const</span> <span class="keyword">nav_t</span> *nav)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> i,j,nd=<span class="number">0</span>,sat;</span><br><span class="line">	<span class="keyword">int</span> bSlip[MAXSAT],bLowElev=<span class="number">0</span>;</span><br><span class="line">	<span class="keyword">double</span> wl0,wl1,elev,el,thres,thres0,delta[<span class="number">50</span>],dmw[MAXSAT],dtmp,fact;</span><br><span class="line">	<span class="keyword">double</span> std_ex,ave_ex;</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">double</span> rad_20=<span class="number">20.0</span>*D2R;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (i=<span class="number">0</span>;i&lt;MAXSAT;i++) &#123;</span><br><span class="line">		dmw[i]=<span class="number">0.0</span>;</span><br><span class="line">		bSlip[i]=<span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//the thresh values is suitable for 30s interval</span></span><br><span class="line">	fact=<span class="number">1.0</span>;</span><br><span class="line">	<span class="keyword">if</span> (PPP_Glo.sample&gt;=<span class="number">29.5</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span> (PPP_Glo.delEp&lt;=<span class="number">2</span>) fact=<span class="number">1.0</span>;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> (PPP_Glo.delEp&lt;=<span class="number">4</span>) fact=<span class="number">1.25</span>;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> (PPP_Glo.delEp&lt;=<span class="number">6</span>) fact=<span class="number">1.5</span>;</span><br><span class="line">		<span class="keyword">else</span>	 fact=<span class="number">2.0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (i=<span class="number">0</span>;i&lt;n&amp;&amp;i&lt;MAXOBS;i++) &#123;</span><br><span class="line">		sat=obs[i].sat;</span><br><span class="line">		<span class="keyword">if</span> (timediff(PPP_Glo.tNow,PPP_Glo.ssat_Ex[sat<span class="number">-1</span>].tLast)&gt;PPP_Glo.sample) &#123;</span><br><span class="line">			PPP_Glo.ssat_Ex[sat<span class="number">-1</span>].mw[<span class="number">1</span>]=<span class="number">0.0</span>;</span><br><span class="line">			PPP_Glo.ssat_Ex[sat<span class="number">-1</span>].mwIndex=<span class="number">0</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		wl1=wlAmbMeas(obs+i,nav);</span><br><span class="line">		wl0=PPP_Glo.ssat_Ex[sat<span class="number">-1</span>].mw[<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*sprintf(PPP_Glo.chMsg,"sat=%s, mw0=%13.3f, mw1=%13.3f\n",PPP_Glo.sFlag[sat-1].id,wl1,</span></span><br><span class="line"><span class="comment">			PPP_Glo.ssat_Ex[sat-1].mw[1]);</span></span><br><span class="line"><span class="comment">		outDebug(1,1,1);*/</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (wl1==<span class="number">0.0</span>||wl0==<span class="number">0.0</span>) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">		elev=rtk-&gt;ssat[sat<span class="number">-1</span>].azel[<span class="number">1</span>];</span><br><span class="line">		el=elev;</span><br><span class="line"></span><br><span class="line">		bLowElev=<span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (elev&lt;rtk-&gt;opt.elmin) &#123;</span><br><span class="line">			el=rtk-&gt;opt.elmin;</span><br><span class="line">			bLowElev=<span class="number">1</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		dtmp=el*R2D;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (el&gt;=rad_20) thres=PPP_Glo.prcOpt_Ex.csThresMW;</span><br><span class="line">		<span class="keyword">else</span>	 thres=-PPP_Glo.prcOpt_Ex.csThresMW*<span class="number">0.1</span>*dtmp+<span class="number">3</span>*PPP_Glo.prcOpt_Ex.csThresMW;</span><br><span class="line"></span><br><span class="line">		dmw[sat<span class="number">-1</span>]=wl1-wl0;</span><br><span class="line"></span><br><span class="line">		thres0=MIN(thres*fact,<span class="number">6.0</span>);</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">fabs</span>(wl1-wl0)&gt;MIN(thres*fact,<span class="number">6.0</span>)) &#123;</span><br><span class="line">			bSlip[sat<span class="number">-1</span>]=<span class="number">1</span>;</span><br><span class="line">			delta[nd++]=wl1-wl0;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (bLowElev) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">			<span class="built_in">sprintf</span>(PPP_Glo.chMsg, <span class="string">"%s MW CS mw_new=%13.3f, mw_old=%13.3f, diff_abs=%13.3f, thres=%13.3f, elev=%4.1f\n"</span>, </span><br><span class="line">				PPP_Glo.sFlag[sat<span class="number">-1</span>].id,wl1,wl0,wl1-wl0,thres0,elev);</span><br><span class="line">			outDebug(OUTWIN,OUTFIL,OUTTIM);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (<span class="number">2</span>*nd+<span class="number">1</span>&lt;=n&amp;&amp;nd&lt;n<span class="number">-3</span>&amp;&amp;nd&lt;=<span class="number">3</span>) &#123;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (nd&gt;<span class="number">2</span>) &#123;</span><br><span class="line">		i=findGross(<span class="number">0</span>,<span class="number">0</span>,delta,nd,<span class="number">0</span>,&amp;std_ex,&amp;ave_ex,<span class="literal">NULL</span>,<span class="number">4.0</span>,<span class="number">0.3</span>,<span class="number">0.2</span>);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (i&lt;=<span class="number">1</span>&amp;&amp;std_ex&lt;=<span class="number">1.0</span>&amp;&amp;<span class="built_in">fabs</span>(ave_ex)&lt;=<span class="number">10.0</span> ) &#123;</span><br><span class="line">			<span class="built_in">sprintf</span>(PPP_Glo.chMsg,<span class="string">"*** WARNING: MW CS abnormally at this epoch %4.1f  %4.2f %d %d\n"</span>,ave_ex,std_ex,nd,n);</span><br><span class="line">			outDebug(OUTWIN,OUTFIL,OUTTIM);</span><br><span class="line"></span><br><span class="line">			<span class="keyword">for</span> (i=<span class="number">0</span>;i&lt;n&amp;&amp;i&lt;MAXOBS;i++) &#123;</span><br><span class="line">				sat=obs[i].sat;</span><br><span class="line">				dmw[sat<span class="number">-1</span>]=<span class="number">0.0</span>;</span><br><span class="line">				bSlip[sat<span class="number">-1</span>]=<span class="number">0</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (i=<span class="number">0</span>;i&lt;n&amp;&amp;i&lt;MAXOBS;i++) &#123;</span><br><span class="line">		sat=obs[i].sat;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!bSlip[sat<span class="number">-1</span>]) &#123;</span><br><span class="line">			<span class="keyword">if</span> (<span class="built_in">fabs</span>(dmw[sat<span class="number">-1</span>])&gt;=<span class="number">1.0</span>) </span><br><span class="line">				PPP_Glo.ssat_Ex[sat<span class="number">-1</span>].obsStat.iCycle=<span class="number">1</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">for</span> (j=<span class="number">0</span>;j&lt;rtk-&gt;opt.nf;j++) </span><br><span class="line">				rtk-&gt;ssat[sat<span class="number">-1</span>].slip[j]|=<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">			PPP_Glo.ssat_Ex[sat<span class="number">-1</span>].obsStat.iCycle=<span class="number">2</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>简单的解释一下代码：</p>
+<pre><code>1. dmw指的是两历元间mw组合差值，bSlip为标称其是否为周跳，将两者初始化
+
+2. fact为间隔了多个历元的倍值，delEp为间隔历元（由于可能存在历元缺失或者启用某些历元，因此用delEp标记上一次历元和当前历元差了几个）
+
+3. 按这一历元每颗卫星遍历进行周跳判断
+    3.1 wlAmbMeas计算当前历元的mw组合，当前mw记为wl1，上一历元为wl0
+    3.2 在detect这个函数中，GAMP没有存当下的mw值，而是在gamPos这个函数最后的keepEpInfo函数中存入PPP_GLO.ssat_Ex.mw中（这什么操作？？）
+
+4. 前文提到，GAMP中是根据采样时间和高度角配置阈值的。因此，接下来就是读取该历元卫星的高度角，并检查高度角是否小于我们设置的最小值（默认10°）。
+GMAP中是以20°分开计算两种不同的阈值配置方式。
+
+5. PPP_Glo.prcOpt_Ex.csThresMW这个值是在execess函数中开头位置calCsThres函数计算而来，参考前面贴出的公式。
+
+6. 其实阈值最大就为6:
+    <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">thres0=MIN(thres*fact,<span class="number">6.0</span>);</span><br></pre></td></tr></table></figure>
+
+7. nd是探测出的周跳数量，后这个处理基于一个什么判断暂时没弄懂
+</code></pre><h5 id="基于GF组合的周跳探测方法"><a href="#基于GF组合的周跳探测方法" class="headerlink" title="基于GF组合的周跳探测方法"></a>基于GF组合的周跳探测方法</h5><p>&emsp;&emsp;GF组合为：</p>
+<script type="math/tex; mode=display">L_{gf}=\lambda_1\phi_1-\lambda_2\phi_2=\lambda_1N_1-\lambda_2N_2-I_1+I_2
+=\lambda_1N_1-\lambda_2N_2-\frac{A}{f^2_1}+\frac{A}{f^2_2}</script><script type="math/tex; mode=display">P_{gf}=P_1-P_2=I_1-I_2=\frac{A}{f^2_1}-\frac{A}{f^2_2}</script><p>&emsp;&emsp;GF组合[相位-相位]组合消除了除电离层和整周模糊度外的其他项，[伪距-伪距]则消除了除电离层延迟外的其他项，当电离层变化平缓或采样时间较短时（把其当做常数），GF组合能有效探测周跳；但当电离层变化活跃时，可能无法探测较小的周跳甚至发生误判，为解决此不足，一般引入伪距观测值进行组合进一步消除电离层的影响，引入伪距观测值的同时也引入了其观测噪声等误差，使得GF观测值误差变大，因此对$P_{GF}(i)$进行拟合生成$Q_i$来滤去伪距噪声的影响，多项式拟合阶数必须满足条件$m=min[(N/100+1),6]$，$N$为历元个数。得到GF组合周跳探测模型：</p>
+<script type="math/tex; mode=display">\delta L_{GF}=L_{GF}-Q=\lambda_1N_1-\lambda_2N_2</script><p>&emsp;&emsp;若满足以下两个条件则认为当前历元存在周跳：</p>
+<script type="math/tex; mode=display">|\delta L_{GF}(i)-\delta L_{GF}(i-1)|>6(\lambda_2-\lambda_1)</script><script type="math/tex; mode=display">|\delta L_{GF}(i+1)-\delta L_{GF}(i)|<(\lambda_2-\lambda_1)</script><p>&emsp;&emsp;上述方法对$P_{GF}$进行了多项式拟合，而多项式拟合设计多项式类型、拟合阶数等人为因素，降低了数据处理的准确性、客观性，且该算法的探测性能依赖于电离层的变化，对采样率要求较高。基于此，对GF组合做出一些改进，较为常用的为相邻历元求差，其去除了噪声较大的伪距观测值，仅将相邻的两个历元的相位GF组合观测值求差来探测周跳：</p>
+<script type="math/tex; mode=display">\delta L_{GF}(i)=L_{GF}(i)-L_{GF}(i-1)=\delta I+\lambda_1\delta N_1-\lambda_2-\delta N_2</script><p>&emsp;&emsp;与MW组合相似的，RTKLIB考虑实时的因素，GF组合也是用固定阈值判断是否发生了周跳，下面贴出RTKLIB中GF组合探测周跳的代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">detslp_gf</span><span class="params">(<span class="keyword">rtk_t</span> *rtk, <span class="keyword">const</span> <span class="keyword">obsd_t</span> *obs, <span class="keyword">int</span> n, <span class="keyword">const</span> <span class="keyword">nav_t</span> *nav)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">double</span> g0,g1;</span><br><span class="line">    <span class="keyword">int</span> i,j;</span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>;i&lt;n&amp;&amp;i&lt;MAXOBS;i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((g1=gfmeas(obs+i,nav))==<span class="number">0.0</span>) <span class="keyword">continue</span>;        </span><br><span class="line">        g0=rtk-&gt;ssat[obs[i].sat<span class="number">-1</span>].gf;</span><br><span class="line">        rtk-&gt;ssat[obs[i].sat<span class="number">-1</span>].gf=g1;</span><br><span class="line">        <span class="keyword">if</span> (g0!=<span class="number">0.0</span>&amp;&amp;<span class="built_in">fabs</span>(g1-g0)&gt;rtk-&gt;opt.thresslip) &#123;      </span><br><span class="line">            <span class="keyword">for</span> (j=<span class="number">0</span>;j&lt;rtk-&gt;opt.nf;j++) rtk-&gt;ssat[obs[i].sat<span class="number">-1</span>].slip[j]|=<span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>&emsp;&emsp;其中gfmeas为构造GF组合的函数，若g1-g0的绝对值大于用户设定的阈值thresslip，则认为该历元发生了周跳（默认阈值为0.05）。<br>&emsp;&emsp;再说GAMP中，GF组合探测周跳是如何实现的。探测方式是与RTKLIB一样的，利用GF组合当前观测值和上一历元组合的观测值做差来检验是否发生周跳，只是在GAMP中根据高度角和采样间隔进行了阈值的配置，下面看一下代码：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* detect cycle slip by geometry free phase jump -----------------------------*/</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">detslp_gf</span><span class="params">(<span class="keyword">rtk_t</span> *rtk, <span class="keyword">const</span> <span class="keyword">obsd_t</span> *obs, <span class="keyword">int</span> n, <span class="keyword">const</span> <span class="keyword">nav_t</span> *nav)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">double</span> g0,g1,elev,thres=<span class="number">0.0</span>,deltaEpoch=<span class="number">1.0</span>;</span><br><span class="line">	<span class="keyword">double</span> elev0,thres0;</span><br><span class="line">	<span class="keyword">int</span> i,j,sat;</span><br><span class="line"></span><br><span class="line">	deltaEpoch=<span class="built_in">fabs</span>(rtk-&gt;tt/PPP_Glo.sample);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (i=<span class="number">0</span>;i&lt;n&amp;&amp;i&lt;MAXOBS;i++) </span><br><span class="line">	&#123;</span><br><span class="line">		sat=obs[i].sat;</span><br><span class="line">		elev=rtk-&gt;ssat[sat<span class="number">-1</span>].azel[<span class="number">1</span>]*R2D;</span><br><span class="line">		elev0=elev;</span><br><span class="line"></span><br><span class="line">		g1=gfmeas(obs+i,nav);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (g1==<span class="number">0.0</span>) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (elev&lt;rtk-&gt;opt.elmin*R2D) elev=rtk-&gt;opt.elmin*R2D;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (elev&gt;=<span class="number">15.0</span>) thres=PPP_Glo.prcOpt_Ex.csThresGF;</span><br><span class="line">		<span class="keyword">else</span> thres=-PPP_Glo.prcOpt_Ex.csThresGF/<span class="number">15.0</span>*elev+<span class="number">2</span>*PPP_Glo.prcOpt_Ex.csThresGF;</span><br><span class="line"></span><br><span class="line">		g0=rtk-&gt;ssat[sat<span class="number">-1</span>].gf;</span><br><span class="line"></span><br><span class="line">		thres0=MIN(thres*deltaEpoch,<span class="number">1.5</span>);</span><br><span class="line">		<span class="keyword">if</span> (g0!=<span class="number">0.0</span>&amp;&amp;<span class="built_in">fabs</span>(g1-g0)&gt;MIN(thres*deltaEpoch,<span class="number">1.5</span>)) </span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">for</span> (j=<span class="number">0</span>;j&lt;rtk-&gt;opt.nf;j++) </span><br><span class="line">				rtk-&gt;ssat[sat<span class="number">-1</span>].slip[j]|=<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">			<span class="built_in">sprintf</span>(PPP_Glo.chMsg,<span class="string">"%s GF CS gf_new=%13.3f, gf_old=%13.3f, diff_abs=%13.3f, thres=%13.3f, elev=%4.1f\n"</span>, </span><br><span class="line">				PPP_Glo.sFlag[sat<span class="number">-1</span>].id,g1,g0,g1-g0,thres0,elev0);</span><br><span class="line">			outDebug(OUTWIN,OUTFIL,OUTTIM);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>&emsp;&emsp;简单浏览代码，我们可以发现其和MW组合的实现方式是类似的：</p>
+<pre><code>1. 计算相隔历元 deltaEpoch，为后续计算阈值使用
+
+2. 取得当前卫星的高度角，计算当前历元GF组合观测值
+
+3. 检查GF观测值和卫星高度角的值
+
+4. 以15°的高度角为分界，两种不同权值计算阈值，取其和1.5中的最小值
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">thres0=MIN(thres*deltaEpoch,<span class="number">1.5</span>);</span><br></pre></td></tr></table></figure>
+
+5. 历元间GF做差与阈值比较
+</code></pre><p><em>——————————————————————————————————————————————</em></p>
+<p>&emsp;&emsp;GAMP中的周跳探测较RTKLIB有较大改善，具体实验算例在下次[有空….时]做。另，许多论文都针对TurboEdit（MW+GF）法有许多新的改进方法，也会在下次中配合算例实现。</p>
+
+            <div class="post-copyright">
+    <div class="content">
+        <p>最后更新： 2019年07月01日 00:00</p>
+        <p>原始链接： <a class="post-url" href="/2019/07/14/2019-07-14/" title="RTKLIB与GAMP的周跳探测实现">https://wu941202.github.io/2019/07/14/2019-07-14/</a></p>
+        <footer>
+            <a href="https://wu941202.github.io">
+                <img src="/images/Wu.png" alt="WuFF">
+                WuFF
+            </a>
+        </footer>
+    </div>
+</div>
+
+      
+        
+            
+
+        
+    </div>
+    <footer class="article-footer">
+        
+        
+<div class="post-share">
+    <a href="javascript:;" id="share-sub" class="post-share-fab">
+        <i class="fa fa-share-alt"></i>
+    </a>
+    <div class="post-share-list" id="share-list">
+        <ul class="share-icons">
+          <li>
+            <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://wu941202.github.io/2019/07/14/2019-07-14/&title=《RTKLIB与GAMP的周跳探测实现》 — Wu's Blog&pic=https://i.loli.net/2019/07/14/5d2abb5e13ed686432.jpg" data-title="微博">
+              <i class="fa fa-weibo"></i>
+            </a>
+          </li>
+          <li>
+            <a class="weixin share-sns" id="wxFab" href="javascript:;" data-title="微信">
+              <i class="fa fa-weixin"></i>
+            </a>
+          </li>
+          <li>
+            <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://wu941202.github.io/2019/07/14/2019-07-14/&title=《RTKLIB与GAMP的周跳探测实现》 — Wu's Blog&source=
+ 阅读RTKLIB源码后发现，RTKLIB中采取观测值文件中LLI标志（卫星失锁）、GF组合和MW组合三种方式联合探测周跳，GF组合与MW组合在RTKL..." data-title="QQ">
+              <i class="fa fa-qq"></i>
+            </a>
+          </li>
+          <li>
+            <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://wu941202.github.io/2019/07/14/2019-07-14/" data-title="Facebook">
+              <i class="fa fa-facebook"></i>
+            </a>
+          </li>
+          <li>
+            <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《RTKLIB与GAMP的周跳探测实现》 — Wu's Blog&url=https://wu941202.github.io/2019/07/14/2019-07-14/&via=https://wu941202.github.io" data-title="Twitter">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+          <li>
+            <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://wu941202.github.io/2019/07/14/2019-07-14/" data-title="Google+">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        </ul>
+     </div>
+</div>
+<div class="post-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;" id="wxShare-close">×</a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://wu941202.github.io/2019/07/14/2019-07-14/" alt="微信分享二维码">
+</div>
+
+<div class="mask"></div>
+
+        
+        <ul class="article-footer-menu">
+            
+            
+  <li class="article-footer-tags">
+    <i class="fa fa-tags"></i>
+      
+    <a href="/tags/rtklib/" class="color2">rtklib</a>
+      
+    <a href="/tags/GMAP/" class="color5">GMAP</a>
+      
+  </li>
+
+        </ul>
+        
+    </footer>
+  </div>
+</article>
+
+
+    <aside class="post-toc-pos post-toc-top" id="post-toc">
+        <nav class="post-toc-wrap">
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#常用周跳探测方法"><span class="post-toc-text">常用周跳探测方法</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-4"><a class="post-toc-link" href="#双频组合周跳探测"><span class="post-toc-text">双频组合周跳探测</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#基于MW组合的周跳探测方法"><span class="post-toc-text">基于MW组合的周跳探测方法</span></a></li><li class="post-toc-item post-toc-level-5"><a class="post-toc-link" href="#基于GF组合的周跳探测方法"><span class="post-toc-text">基于GF组合的周跳探测方法</span></a></li></ol></li></ol></li></ol>
+        </nav>
+    </aside>
+    
+
+<nav id="article-nav">
+  
+  
+    <a href="/2019/07/01/2019-07-01/" id="article-nav-older" class="article-nav-link-wrap">
+      <span class="article-nav-title">RTKLIB相对定位</span>
+      <i class="fa fa-hand-o-right" aria-hidden="true"></i>
+    </a>
+  
+</nav>
+
+
+
+    
+</section>
+        
+      </div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+
+      <p>
+        Powered by  <a href="http://hexo.io/" target="_blank">Hexo</a>
+        Theme <a href="//github.com/wongminho/hexo-theme-miho" target="_blank">MiHo</a>
+      &copy; 2019 WuFF<br>
+      </p>
+    </div>
+  </div>
+</footer>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<script src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script>
+  var mihoConfig = {
+      root: "https://wu941202.github.io",
+      animate: true,
+      isHome: false,
+      share: true,
+      reward: 0
+  }
+</script>
+<div class="sidebar">
+    <div id="sidebar-search" title="Search">
+        <i class="fa fa-search"></i>
+    </div>
+    <div id="sidebar-category" title="Categories">
+        <i class="fa fa-book"></i>
+    </div>
+    <div id="sidebar-tag" title="Tags">
+        <i class="fa fa-tags"></i>
+    </div>
+    <div id="sidebar-top">
+        <span class="sidebar-top-icon"><i class="fa fa-angle-up"></i></span>
+    </div>
+</div>
+<div class="sidebar-menu-box" id="sidebar-menu-box">
+    <div class="sidebar-menu-box-container">
+        <div id="sidebar-menu-box-categories">
+            <a class="category-link" href="/categories/RTKLIB/">RTKLIB</a><a class="category-link" href="/categories/重力数据处理/">重力数据处理</a>
+        </div>
+        <div id="sidebar-menu-box-tags">
+            <a href="/tags/GMAP/" style="font-size: 10px;">GMAP</a> <a href="/tags/ppp/" style="font-size: 10px;">ppp</a> <a href="/tags/rp/" style="font-size: 10px;">rp</a> <a href="/tags/rtklib/" style="font-size: 20px;">rtklib</a>
+        </div>
+    </div>
+    <a href="javascript:;" class="sidebar-menu-box-close">&times;</a>
+</div>
+<div class="mobile-header-menu-nav" id="mobile-header-menu-nav">
+    <div class="mobile-header-menu-container">
+        <span class="title">Menus</span>
+        <ul class="mobile-header-menu-navbar">
+            
+            <li>
+                <a href="/">
+                    <i class="fa fa-home"></i><span>Home</span>
+                </a>
+            </li>
+            
+            <li>
+                <a href="/archives">
+                    <i class="fa fa-archive"></i><span>Archives</span>
+                </a>
+            </li>
+            
+            <li>
+                <a href="/about">
+                    <i class="fa fa-user"></i><span>About</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    <div class="mobile-header-tag-container">
+        <span class="title">Tags</span>
+        <div id="mobile-header-container-tags">
+            <a href="/tags/GMAP/" style="font-size: 10px;">GMAP</a> <a href="/tags/ppp/" style="font-size: 10px;">ppp</a> <a href="/tags/rp/" style="font-size: 10px;">rp</a> <a href="/tags/rtklib/" style="font-size: 20px;">rtklib</a>
+        </div>
+    </div>
+</div>
+<div class="search-wrap">
+    <span class="search-close">&times;</span>
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+            <i class="icon icon-lg icon-chevron-left"></i>
+        </a>
+        <input class="search-field" placeholder="Search..." id="keywords">
+        <a id="search-submit" href="javascript:;">
+            <i class="fa fa-search"></i>
+        </a>
+    <div class="search-container" id="search-container">
+        <ul class="search-result" id="search-result">
+        </ul>
+    </div>
+</div>
+
+<div id="search-tpl">
+    <li class="search-result-item">
+        <a href="{url}" class="search-item-li">
+            <span class="search-item-li-title" title="{title}">{title}</span>
+        </a>
+    </li>
+</div>
+<script src="/js/search.js"></script>
+<script src="/js/main.js"></script>
+
+
+  <script src="//cdn.bootcss.com/particles.js/2.0.0/particles.min.js"></script>
+  <div id="particles"></div>
+  <script src="/js/particles.js"></script>
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.5.0/animate.min.css">
+  <script src="//cdn.bootcss.com/scrollReveal.js/3.0.5/scrollreveal.js"></script>
+  <script src="/js/animate.js"></script>
+
+
+  <script src="/js/pop-img.js"></script>
+  <script>
+     $(".article-entry p img").popImg();
+  </script>
+
+  </div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
